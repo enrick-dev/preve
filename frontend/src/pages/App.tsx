@@ -1,22 +1,35 @@
-import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
+const Header = () => (
+  <header className="flex-initial flex justify-between bg-primary text-secondary items-center">
+    <img src="/logo.png" alt="Logo Preve" className="size-16" />
+    <div>
+      <ul className="flex gap-3">
+        <li>
+          <Link to="/">Pagina Inicial</Link>
+        </li>
+        <li className="opacity-70 pointer-events-none">
+          <Link to="#">Pagina 2</Link>
+        </li>
+        <li className="opacity-70 pointer-events-none">
+          <Link to="#">Pagina 3</Link>
+        </li>
+        <li className="opacity-70 pointer-events-none">
+          <Link to="#">Pagina 4</Link>
+        </li>
+      </ul>
+    </div>
+    <div></div>
+  </header>
+);
+const Body = () => {
+  return <body className="flex-1"></body>;
+};
 function App() {
-  const [count, setCount] = useState(0);
-
   return (
-    <div className="w-dvw h-dvh bg-primary text-secondary">
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+    <div className="w-dvw h-dvh flex flex-col">
+      <Header />
+      <Body />
     </div>
   );
 }
