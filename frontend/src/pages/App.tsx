@@ -1,35 +1,18 @@
+import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 
-const Header = () => (
-  <header className="flex-initial flex justify-between bg-primary text-secondary items-center">
-    <img src="/logo.png" alt="Logo Preve" className="size-16" />
-    <div>
-      <ul className="flex gap-3">
-        <li>
-          <Link to="/">Pagina Inicial</Link>
-        </li>
-        <li className="opacity-70 pointer-events-none">
-          <Link to="#">Pagina 2</Link>
-        </li>
-        <li className="opacity-70 pointer-events-none">
-          <Link to="#">Pagina 3</Link>
-        </li>
-        <li className="opacity-70 pointer-events-none">
-          <Link to="#">Pagina 4</Link>
-        </li>
-      </ul>
-    </div>
-    <div></div>
-  </header>
-);
-const Body = () => {
-  return <body className="flex-1"></body>;
-};
 function App() {
   return (
-    <div className="w-dvw h-dvh flex flex-col">
-      <Header />
-      <Body />
+    <div className="flex justify-center items-center h-full">
+      <div className="gap-2 flex flex-col items-center">
+        <h1>
+          Exemplo de pagina inicial, acesse o OTB pela barra de navegação ou
+          clicando aqui...
+        </h1>
+        <Link to="/otb">
+          <Button>OTB</Button>
+        </Link>
+      </div>
     </div>
   );
 }

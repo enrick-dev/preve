@@ -1,15 +1,26 @@
+import NavbarPages from '@/layouts/NavbarPages';
 import App from '@/pages/App';
 import NotFound from '@/pages/NotFound';
+import Otb from '@/pages/Otb';
 import { createBrowserRouter } from 'react-router-dom';
 
 const router = createBrowserRouter([
   {
-    path: '/',
-    element: <App />,
-  },
-  {
-    path: '*',
-    element: <NotFound />,
+    Component: NavbarPages,
+    children: [
+      {
+        path: '/',
+        element: <App />,
+      },
+      {
+        path: '/otb',
+        element: <Otb />,
+      },
+      {
+        path: '*',
+        element: <NotFound />,
+      },
+    ],
   },
 ]);
 
