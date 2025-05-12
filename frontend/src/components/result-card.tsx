@@ -3,7 +3,7 @@ import { BarChart3, ShoppingBag } from 'lucide-react';
 
 interface ResultCardProps {
   title: string;
-  value: string;
+  value: string | number;
   description: string;
   icon: 'chart' | 'shopping';
 }

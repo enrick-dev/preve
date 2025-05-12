@@ -26,6 +26,9 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Separator } from '@/components/ui/separator';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 
 const schema = z.object({
   expectedSales: z
@@ -57,9 +60,15 @@ type CalculationResult = {
 const Otb = () => {
   const [result, setResult] = React.useState<CalculationResult | null>(null);
   const [scenarios, setScenarios] = React.useState<
-    Array<{ id: number; inputs: FormData; result: CalculationResult }>
+    Array<{
+      id: number;
+      inputs: FormData;
+      result: CalculationResult;
+      mode: 'reais' | 'unidades';
+    }>
   >([]);
   const [activeTab, setActiveTab] = React.useState('calculator');
+  const [mode, setMode] = React.useState<'reais' | 'unidades'>('reais');
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -79,12 +88,17 @@ const Otb = () => {
     setResult(newResult);
     setScenarios((prev) => [
       ...prev,
-      { id: Date.now(), inputs: values, result: newResult },
+      { id: Date.now(), inputs: values, result: newResult, mode },
     ]);
   };
 
   const clearForm = () => {
-    form.reset();
+    form.reset({
+      expectedSales: 0,
+      currentInventory: 0,
+      desiredCoverage: 4,
+    });
+    setMode('reais');
     setResult(null);
   };
 
@@ -92,8 +106,10 @@ const Otb = () => {
     id: number;
     inputs: FormData;
     result: CalculationResult;
+    mode: 'reais' | 'unidades';
   }) => {
     form.reset(scenario.inputs);
+    setMode(scenario.mode);
     setResult(scenario.result);
     setActiveTab('calculator');
   };
@@ -171,22 +187,67 @@ const Otb = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-4">
+                <RadioGroup
+                  value={mode}
+                  onValueChange={(v) =>
+                    v == 'reais' || v == 'unidades' ? setMode(v) : null
+                  }
+                  className="flex gap-2 w-full"
+                >
+                  <div
+                    className={cn(
+                      'flex items-center gap-2 flex-1 px-4 py-3 rounded-xl border',
+                      mode == 'reais' &&
+                        'bg-primary/10 border border-primary text-primary ',
+                    )}
+                  >
+                    <RadioGroupItem
+                      value="reais"
+                      id="reais"
+                      className="border-primary"
+                    />
+                    <Label htmlFor="reais">Reais</Label>
+                  </div>
+                  <div
+                    className={cn(
+                      'flex items-center gap-2 flex-1 px-4 py-3 rounded-xl border',
+                      mode == 'unidades' &&
+                        'bg-primary/10 border border-primary text-primary ',
+                    )}
+                  >
+                    <RadioGroupItem value="unidades" id="unidades" />
+                    <Label htmlFor="unidades">Unidades</Label>
+                  </div>
+                </RadioGroup>
+                <div className="grid gap-4 mt-4">
                   <FormField
                     control={form.control}
                     name="expectedSales"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Valor de Vendas Esperadas (R$)</FormLabel>
+                        <FormLabel>
+                          Vendas Esperadas (
+                          {mode === 'reais' ? 'R$' : 'unidades'})
+                        </FormLabel>
                         <FormControl>
-                          <Input
-                            value={formatBRL(field.value)}
-                            onChange={(e) => {
-                              const raw = e.target.value.replace(/\D/g, '');
-                              const number = raw ? parseInt(raw, 10) / 100 : 0;
-                              field.onChange(number);
-                            }}
-                          />
+                          {mode === 'reais' ? (
+                            <Input
+                              value={formatBRL(field.value)}
+                              onChange={(e) => {
+                                const raw = e.target.value.replace(/\D/g, '');
+                                const num = raw ? parseInt(raw, 10) / 100 : 0;
+                                field.onChange(num);
+                              }}
+                            />
+                          ) : (
+                            <Input
+                              {...field}
+                              type="number"
+                              onChange={(e) =>
+                                field.onChange(parseFloat(e.target.value))
+                              }
+                            />
+                          )}
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -198,16 +259,28 @@ const Otb = () => {
                     name="currentInventory"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Estoque Atual (R$)</FormLabel>
+                        <FormLabel>
+                          Estoque Atual ({mode === 'reais' ? 'R$' : 'unidades'})
+                        </FormLabel>
                         <FormControl>
-                          <Input
-                            value={formatBRL(field.value)}
-                            onChange={(e) => {
-                              const raw = e.target.value.replace(/\D/g, '');
-                              const number = raw ? parseInt(raw, 10) / 100 : 0;
-                              field.onChange(number);
-                            }}
-                          />
+                          {mode === 'reais' ? (
+                            <Input
+                              value={formatBRL(field.value)}
+                              onChange={(e) => {
+                                const raw = e.target.value.replace(/\D/g, '');
+                                const num = raw ? parseInt(raw, 10) / 100 : 0;
+                                field.onChange(num);
+                              }}
+                            />
+                          ) : (
+                            <Input
+                              {...field}
+                              type="number"
+                              onChange={(e) =>
+                                field.onChange(parseFloat(e.target.value))
+                              }
+                            />
+                          )}
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -248,13 +321,21 @@ const Otb = () => {
                 <>
                   <ResultCard
                     title="Estoque Ideal"
-                    value={formatCurrency(result.idealInventory)}
+                    value={
+                      mode == 'reais'
+                        ? formatCurrency(result.idealInventory)
+                        : result.idealInventory
+                    }
                     description="Baseado nas vendas esperadas e cobertura desejada"
                     icon="chart"
                   />
                   <ResultCard
                     title="Sugestão de Compra"
-                    value={formatCurrency(result.purchaseSuggestion)}
+                    value={
+                      mode == 'reais'
+                        ? formatCurrency(result.purchaseSuggestion)
+                        : result.purchaseSuggestion
+                    }
                     description={
                       result.purchaseSuggestion > 0
                         ? 'Valor recomendado para compra'
@@ -321,11 +402,17 @@ const Otb = () => {
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div>
                         <p className="text-gray-500">Vendas Esperadas:</p>
-                        <p>R$ {scenario.inputs.expectedSales}</p>
+                        <p>
+                          {scenario.mode == 'reais' ? 'R$ ' : ''}
+                          {scenario.inputs.expectedSales}
+                        </p>
                       </div>
                       <div>
                         <p className="text-gray-500">Estoque Atual:</p>
-                        <p>R$ {scenario.inputs.currentInventory}</p>
+                        <p>
+                          {scenario.mode == 'reais' ? 'R$ ' : ''}{' '}
+                          {scenario.inputs.currentInventory}
+                        </p>
                       </div>
                       <div>
                         <p className="text-gray-500">Cobertura (semanas):</p>
@@ -334,7 +421,9 @@ const Otb = () => {
                       <div>
                         <p className="text-gray-500">Sugestão de Compra:</p>
                         <p>
-                          {formatCurrency(scenario.result.purchaseSuggestion)}
+                          {scenario.mode == 'reais'
+                            ? formatCurrency(scenario.result.purchaseSuggestion)
+                            : scenario.result.purchaseSuggestion}
                         </p>
                       </div>
                     </div>
