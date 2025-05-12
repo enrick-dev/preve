@@ -25,6 +25,7 @@ import {
   FormControl,
   FormMessage,
 } from '@/components/ui/form';
+import { Separator } from '@/components/ui/separator';
 
 const schema = z.object({
   expectedSales: z
@@ -85,6 +86,16 @@ const Otb = () => {
   const clearForm = () => {
     form.reset();
     setResult(null);
+  };
+
+  const loadScenario = (scenario: {
+    id: number;
+    inputs: FormData;
+    result: CalculationResult;
+  }) => {
+    form.reset(scenario.inputs);
+    setResult(scenario.result);
+    setActiveTab('calculator');
   };
 
   const getStatusInfo = (status: string) => {
@@ -278,7 +289,73 @@ const Otb = () => {
         </Form>
       </TabsContent>
 
-      <TabsContent value="scenarios"></TabsContent>
+      <TabsContent value="scenarios" className="w-full max-w-5xl">
+        <Card>
+          <CardHeader>
+            <CardTitle>Cenários Salvos</CardTitle>
+            <CardDescription>
+              Histórico de cálculos realizados nesta sessão
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {scenarios.length > 0 ? (
+              <div className="grid gap-4">
+                {scenarios.map((scenario, index) => (
+                  <div
+                    key={scenario.id}
+                    className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
+                    onClick={() => loadScenario(scenario)}
+                  >
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="font-medium">Cenário {index + 1}</h3>
+                      <span
+                        className={`text-sm px-2 py-1 rounded-full ${getStatusInfo(
+                          scenario.result.status,
+                        )
+                          .color.replace('bg-', 'bg-')
+                          .replace('border-', '')}`}
+                      >
+                        {getStatusInfo(scenario.result.status).title}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <p className="text-gray-500">Vendas Esperadas:</p>
+                        <p>R$ {scenario.inputs.expectedSales}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Estoque Atual:</p>
+                        <p>R$ {scenario.inputs.currentInventory}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Cobertura (semanas):</p>
+                        <p>{scenario.inputs.desiredCoverage}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Sugestão de Compra:</p>
+                        <p>
+                          {formatCurrency(scenario.result.purchaseSuggestion)}
+                        </p>
+                      </div>
+                    </div>
+                    <Separator className="my-2" />
+                    <div className="text-sm text-blue-600">
+                      Clique para carregar este cenário
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center p-6">
+                <p className="text-gray-500">
+                  Nenhum cenário salvo ainda. Faça cálculos na aba Calculadora
+                  para salvá-los aqui.
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </TabsContent>
     </Tabs>
   );
 };
