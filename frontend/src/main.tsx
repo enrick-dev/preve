@@ -9,7 +9,7 @@ import { ThemeProvider } from './context/theme.tsx';
 const client = new QueryClient();
 
 createRoot(document.getElementById('root')!).render(
-  <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+  <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
     <QueryClientProvider client={client}>
       <React.StrictMode>
         <RouterProvider router={router} />
