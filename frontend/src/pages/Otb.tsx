@@ -1,82 +1,47 @@
-import { ResultCard } from '@/components/result-card';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { calculatePurchase, formatCurrency } from '@/utils/calculations';
-import { AlertTriangle, CheckCircle, Info, ShoppingCart } from 'lucide-react';
-import React from 'react';
-import { z } from 'zod';
+import { Info } from 'lucide-react';
+import {
+  OtbCalculator,
+  schema,
+  type FormData,
+} from '@/components/otb/otb-calculator';
+import { OtbScenarios } from '@/components/otb/otb-scenarios';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from '@/components/ui/form';
-import { Separator } from '@/components/ui/separator';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
+import { ResultCard } from '@/components/result-card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { getStatusInfo } from '@/utils/statusInfo';
 
-const schema = z.object({
-  expectedSales: z
-    .number({
-      required_error: 'Obrigatório',
-      invalid_type_error: 'Valor inválido',
-    })
-    .min(1, 'Insira um valor acima de zero'),
-  currentInventory: z
-    .number({
-      required_error: 'Obrigatório',
-      invalid_type_error: 'Valor inválido',
-    })
-    .min(1, 'Insira um valor acima de zero'),
-  desiredCoverage: z.number({
-    required_error: 'Obrigatório',
-    invalid_type_error: 'Valor inválido',
-  }),
-});
-
-type FormData = z.infer<typeof schema>;
-
-type CalculationResult = {
+export type CalculationResult = {
   idealInventory: number;
   purchaseSuggestion: number;
   status: 'adequate' | 'need-to-buy' | 'excess' | 'critical-need-to-buy';
 };
 
+type Scenario = {
+  id: number;
+  inputs: FormData;
+  result: CalculationResult;
+  mode: 'reais' | 'unidades';
+};
+
+const DEFAULT_VALUES: FormData = {
+  expectedSales: 0,
+  currentInventory: 0,
+  desiredCoverage: 4,
+};
+
 const Otb = () => {
   const [result, setResult] = React.useState<CalculationResult | null>(null);
-  const [scenarios, setScenarios] = React.useState<
-    Array<{
-      id: number;
-      inputs: FormData;
-      result: CalculationResult;
-      mode: 'reais' | 'unidades';
-    }>
-  >([]);
+  const [scenarios, setScenarios] = React.useState<Scenario[]>([]);
   const [activeTab, setActiveTab] = React.useState('calculator');
   const [mode, setMode] = React.useState<'reais' | 'unidades'>('reais');
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: {
-      expectedSales: 0,
-      currentInventory: 0,
-      desiredCoverage: 4,
-    },
+    defaultValues: DEFAULT_VALUES,
   });
 
   const onSubmit = (values: FormData) => {
@@ -93,74 +58,20 @@ const Otb = () => {
   };
 
   const clearForm = () => {
-    form.reset({
-      expectedSales: 0,
-      currentInventory: 0,
-      desiredCoverage: 4,
-    });
+    form.reset(DEFAULT_VALUES);
     setMode('reais');
     setResult(null);
   };
 
-  const loadScenario = (scenario: {
-    id: number;
-    inputs: FormData;
-    result: CalculationResult;
-    mode: 'reais' | 'unidades';
-  }) => {
+  const loadScenario = (scenario: Scenario) => {
     form.reset(scenario.inputs);
     setMode(scenario.mode);
     setResult(scenario.result);
     setActiveTab('calculator');
   };
 
-  const getStatusInfo = (status: string) => {
-    switch (status) {
-      case 'critical-need-to-buy':
-        return {
-          icon: <ShoppingCart className="h-5 w-5 text-red-800" />,
-          title: 'Precisa Comprar Urgente',
-          description:
-            'O estoque atual está muito abaixo do ideal podendo atrapalhar a operação.',
-          color: 'bg-red-50 border-red-200 text-red-800',
-        };
-      case 'need-to-buy':
-        return {
-          icon: <ShoppingCart className="h-5 w-5 text-red-800" />,
-          title: 'Precisa Comprar',
-          description:
-            'O estoque atual está abaixo do ideal para a cobertura desejada.',
-          color: 'bg-red-50 border-red-200 text-red-800',
-        };
-      case 'excess':
-        return {
-          icon: <AlertTriangle className="h-5 w-5 text-amber-500" />,
-          title: 'Estoque Excedente',
-          description:
-            'O estoque atual está significativamente acima do necessário.',
-          color: 'bg-amber-50 border-amber-200 text-amber-800',
-        };
-      case 'adequate':
-        return {
-          icon: <CheckCircle className="h-5 w-5 text-green-800" />,
-          title: 'Estoque Adequado',
-          description: 'O estoque atual está dentro dos parâmetros ideais.',
-          color: 'bg-green-50 border-green-200 text-green-800',
-        };
-      default:
-        return {
-          icon: <Info className="h-5 w-5" />,
-          title: 'Informação',
-          description: 'Preencha os campos e calcule para ver o resultado.',
-          color: 'bg-text-primary border-text-primary text-primary',
-        };
-    }
-  };
   const formatBRL = (value: number) =>
-    value.toLocaleString('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    });
+    value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
   return (
     <Tabs
@@ -173,277 +84,70 @@ const Otb = () => {
         <TabsTrigger value="scenarios">Cenários Salvos</TabsTrigger>
       </TabsList>
 
-      <TabsContent value="calculator" className="w-full max-w-5xl">
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="grid gap-6 md:grid-cols-2"
-          >
-            <Card>
-              <CardHeader>
-                <CardTitle>Dados de Entrada</CardTitle>
-                <CardDescription>
-                  Preencha os campos abaixo para calcular o estoque ideal
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <RadioGroup
-                  value={mode}
-                  onValueChange={(v) =>
-                    v == 'reais' || v == 'unidades' ? setMode(v) : null
-                  }
-                  className="flex gap-2 w-full"
-                >
-                  <div
-                    className={cn(
-                      'flex items-center gap-2 flex-1 px-4 py-3 rounded-xl border',
-                      mode == 'reais' &&
-                        'bg-primary/10 border border-primary text-primary ',
-                    )}
-                  >
-                    <RadioGroupItem
-                      value="reais"
-                      id="reais"
-                      className="border-primary"
-                    />
-                    <Label htmlFor="reais">Reais</Label>
-                  </div>
-                  <div
-                    className={cn(
-                      'flex items-center gap-2 flex-1 px-4 py-3 rounded-xl border',
-                      mode == 'unidades' &&
-                        'bg-primary/10 border border-primary text-primary ',
-                    )}
-                  >
-                    <RadioGroupItem value="unidades" id="unidades" />
-                    <Label htmlFor="unidades">Unidades</Label>
-                  </div>
-                </RadioGroup>
-                <div className="grid gap-4 mt-4">
-                  <FormField
-                    control={form.control}
-                    name="expectedSales"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Vendas Esperadas (
-                          {mode === 'reais' ? 'R$' : 'unidades'})
-                        </FormLabel>
-                        <FormControl>
-                          {mode === 'reais' ? (
-                            <Input
-                              value={formatBRL(field.value)}
-                              onChange={(e) => {
-                                const raw = e.target.value.replace(/\D/g, '');
-                                const num = raw ? parseInt(raw, 10) / 100 : 0;
-                                field.onChange(num);
-                              }}
-                            />
-                          ) : (
-                            <Input
-                              {...field}
-                              type="number"
-                              onChange={(e) =>
-                                field.onChange(parseFloat(e.target.value))
-                              }
-                            />
-                          )}
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="currentInventory"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Estoque Atual ({mode === 'reais' ? 'R$' : 'unidades'})
-                        </FormLabel>
-                        <FormControl>
-                          {mode === 'reais' ? (
-                            <Input
-                              value={formatBRL(field.value)}
-                              onChange={(e) => {
-                                const raw = e.target.value.replace(/\D/g, '');
-                                const num = raw ? parseInt(raw, 10) / 100 : 0;
-                                field.onChange(num);
-                              }}
-                            />
-                          ) : (
-                            <Input
-                              {...field}
-                              type="number"
-                              onChange={(e) =>
-                                field.onChange(parseFloat(e.target.value))
-                              }
-                            />
-                          )}
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="desiredCoverage"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Cobertura Desejada (semanas)</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="number"
-                            onChange={(e) => {
-                              field.onChange(parseInt(e.target.value, 10));
-                            }}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button variant="outline" type="button" onClick={clearForm}>
-                  Limpar
-                </Button>
-                <Button type="submit">Calcular</Button>
-              </CardFooter>
-            </Card>
-
-            <div className="flex flex-col gap-4">
-              {result ? (
-                <>
-                  <ResultCard
-                    title="Estoque Ideal"
-                    value={
-                      mode == 'reais'
-                        ? formatCurrency(result.idealInventory)
-                        : result.idealInventory
-                    }
-                    description="Baseado nas vendas esperadas e cobertura desejada"
-                    icon="chart"
-                  />
-                  <ResultCard
-                    title="Sugestão de Compra"
-                    value={
-                      mode == 'reais'
-                        ? formatCurrency(result.purchaseSuggestion)
-                        : result.purchaseSuggestion
-                    }
-                    description={
-                      result.purchaseSuggestion > 0
-                        ? 'Valor recomendado para compra'
-                        : 'Não é necessário comprar no momento'
-                    }
-                    icon="shopping"
-                  />
-                  <Alert className={getStatusInfo(result.status).color}>
-                    <AlertTitle className="flex gap-2">
-                      {getStatusInfo(result.status).icon}
-                      {getStatusInfo(result.status).title}
-                    </AlertTitle>
-                    <AlertDescription>
-                      {getStatusInfo(result.status).description}
-                    </AlertDescription>
-                  </Alert>
-                </>
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center p-6 bg-muted/80 rounded-lg border ">
-                    <Info className="h-12 w-12 text-primary mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">Sem Cálculos</h3>
-                    <p className="text-muted-foreground">
-                      Preencha os campos ao lado e clique em "Calcular" para ver
-                      os resultados.
-                    </p>
-                  </div>
-                </div>
-              )}
+      <TabsContent
+        value="calculator"
+        className="w-full max-w-5xl grid gap-6 md:grid-cols-2"
+      >
+        <OtbCalculator
+          mode={mode}
+          setMode={setMode}
+          onSubmit={onSubmit}
+          clearForm={clearForm}
+          form={form}
+          formatBRL={formatBRL}
+        />
+        {result ? (
+          <div className="mt-6 flex flex-col gap-4">
+            <ResultCard
+              title="Estoque Ideal"
+              value={
+                mode == 'reais'
+                  ? formatCurrency(result.idealInventory)
+                  : result.idealInventory
+              }
+              description="Baseado nas vendas esperadas e cobertura desejada"
+              icon="chart"
+            />
+            <ResultCard
+              title="Sugestão de Compra"
+              value={
+                mode == 'reais'
+                  ? formatCurrency(result.purchaseSuggestion)
+                  : result.purchaseSuggestion
+              }
+              description={
+                result.purchaseSuggestion > 0
+                  ? 'Valor recomendado para compra'
+                  : 'Não é necessário comprar no momento'
+              }
+              icon="shopping"
+            />
+            <Alert className={getStatusInfo(result.status).color}>
+              <AlertTitle className="flex gap-2">
+                {getStatusInfo(result.status).icon}
+                {getStatusInfo(result.status).title}
+              </AlertTitle>
+              <AlertDescription>
+                {getStatusInfo(result.status).description}
+              </AlertDescription>
+            </Alert>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center p-6 bg-muted/80 rounded-lg border ">
+              <Info className="h-12 w-12 text-primary mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2">Sem Cálculos</h3>
+              <p className="text-muted-foreground">
+                Preencha os campos e clique em "Calcular" para ver os
+                resultados.
+              </p>
             </div>
-          </form>
-        </Form>
+          </div>
+        )}
       </TabsContent>
 
       <TabsContent value="scenarios" className="w-full max-w-5xl">
-        <Card className="max-md:gap-2 py-3">
-          <CardHeader>
-            <CardTitle>Cenários Salvos</CardTitle>
-            <CardDescription>
-              Histórico de cálculos realizados nesta sessão
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="max-md:px-2 ">
-            {scenarios.length > 0 ? (
-              <div className="grid gap-4">
-                {scenarios.map((scenario, index) => (
-                  <div
-                    key={scenario.id}
-                    className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
-                    onClick={() => loadScenario(scenario)}
-                  >
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="font-medium">Cenário {index + 1}</h3>
-                      <span
-                        className={`text-sm px-2 py-1 rounded-full ${getStatusInfo(
-                          scenario.result.status,
-                        )
-                          .color.replace('bg-', 'bg-')
-                          .replace('border-', '')}`}
-                      >
-                        {getStatusInfo(scenario.result.status).title}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div>
-                        <p className="text-gray-500">Vendas Esperadas:</p>
-                        <p>
-                          {scenario.mode == 'reais' ? 'R$ ' : ''}
-                          {scenario.inputs.expectedSales}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">Estoque Atual:</p>
-                        <p>
-                          {scenario.mode == 'reais' ? 'R$ ' : ''}{' '}
-                          {scenario.inputs.currentInventory}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">Cobertura (semanas):</p>
-                        <p>{scenario.inputs.desiredCoverage}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">Sugestão de Compra:</p>
-                        <p>
-                          {scenario.mode == 'reais'
-                            ? formatCurrency(scenario.result.purchaseSuggestion)
-                            : scenario.result.purchaseSuggestion}
-                        </p>
-                      </div>
-                    </div>
-                    <Separator className="my-2" />
-                    <div className="text-sm text-blue-600">
-                      Clique para carregar este cenário
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center p-6">
-                <p className="text-gray-500">
-                  Nenhum cenário salvo ainda. Faça cálculos na aba Calculadora
-                  para salvá-los aqui.
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <OtbScenarios scenarios={scenarios} loadScenario={loadScenario} />
       </TabsContent>
     </Tabs>
   );
