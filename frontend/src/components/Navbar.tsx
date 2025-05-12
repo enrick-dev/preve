@@ -31,11 +31,11 @@ const Navbar = ({ className }: PropsNavbar) => {
   return (
     <header
       className={cn(
-        'flex-initial flex justify-between bg-primary text-secondary items-center',
+        'flex-initial flex justify-between bg-primary text-secondary items-center border-b px-10',
         className,
       )}
     >
-      <img src="/logo.png" alt="Logo Preve" className="size-16" />
+      <img src="/logo.png" alt="Logo Preve" className="size-14" />
       <div>
         <ul className="flex gap-3">
           {links.map((item) => (
