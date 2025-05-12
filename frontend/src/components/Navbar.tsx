@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { Link } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 
 interface PropsNavbar {
   className: string;
@@ -18,12 +18,12 @@ const Navbar = ({ className }: PropsNavbar) => {
       active: true,
     },
     {
-      path: '/',
+      path: '/pag3',
       title: 'Pagina 3',
       active: false,
     },
     {
-      path: '/',
+      path: '/pag4',
       title: 'Pagina 4',
       active: false,
     },
@@ -31,7 +31,7 @@ const Navbar = ({ className }: PropsNavbar) => {
   return (
     <header
       className={cn(
-        'flex-initial flex justify-between bg-primary text-secondary items-center border-b px-10',
+        'flex-initial flex justify-between bg-foreground text-secondary items-center border-b px-8 mt-2 mx-2 rounded-full',
         className,
       )}
     >
@@ -44,7 +44,14 @@ const Navbar = ({ className }: PropsNavbar) => {
                 !item.active ? 'opacity-70 pointer-events-none' : ''
               }`}
             >
-              <Link to={item.path}>{item.title}</Link>
+              <NavLink
+                className={({ isActive }) =>
+                  isActive ? ' transition-all text-primary' : ''
+                }
+                to={item.path}
+              >
+                {item.title}
+              </NavLink>
             </li>
           ))}
         </ul>
