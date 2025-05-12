@@ -166,9 +166,9 @@ const Otb = () => {
     <Tabs
       value={activeTab}
       onValueChange={setActiveTab}
-      className="w-full px-10 py-10 items-center"
+      className="w-full px-10 py-10 items-center max-md:px-3 max-md:py-4"
     >
-      <TabsList className="grid w-full max-w-5xl grid-cols-2 mb-6">
+      <TabsList className="grid w-full max-w-5xl grid-cols-2 mb-6 max-md:mb-1">
         <TabsTrigger value="calculator">Calculadora</TabsTrigger>
         <TabsTrigger value="scenarios">Cenários Salvos</TabsTrigger>
       </TabsList>
@@ -355,10 +355,10 @@ const Otb = () => {
                 </>
               ) : (
                 <div className="flex items-center justify-center h-full">
-                  <div className="text-center p-6 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="text-center p-6 bg-muted/80 rounded-lg border ">
                     <Info className="h-12 w-12 text-primary mx-auto mb-4" />
                     <h3 className="text-lg font-medium mb-2">Sem Cálculos</h3>
-                    <p className="text-gray-600">
+                    <p className="text-muted-foreground">
                       Preencha os campos ao lado e clique em "Calcular" para ver
                       os resultados.
                     </p>
@@ -371,14 +371,14 @@ const Otb = () => {
       </TabsContent>
 
       <TabsContent value="scenarios" className="w-full max-w-5xl">
-        <Card>
+        <Card className="max-md:gap-2 py-3">
           <CardHeader>
             <CardTitle>Cenários Salvos</CardTitle>
             <CardDescription>
               Histórico de cálculos realizados nesta sessão
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="max-md:px-2 ">
             {scenarios.length > 0 ? (
               <div className="grid gap-4">
                 {scenarios.map((scenario, index) => (

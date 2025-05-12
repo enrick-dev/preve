@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils';
 import { NavLink } from 'react-router-dom';
+import { ModeToggleTheme } from './mode-toggle-theme';
 
 interface PropsNavbar {
   className: string;
@@ -31,13 +32,13 @@ const Navbar = ({ className }: PropsNavbar) => {
   return (
     <header
       className={cn(
-        'flex-initial flex justify-between bg-foreground text-secondary items-center border-b px-8 mt-2 mx-2 rounded-full',
+        ' dark:bg-foreground/60 lex-initial flex justify-between bg-foreground text-secondary items-center border-b px-8 mt-2 mx-2 rounded-full max-md:px-2 max-md:pr-4 pr-6',
         className,
       )}
     >
       <img src="/logo.png" alt="Logo Preve" className="size-14" />
       <div>
-        <ul className="flex gap-3">
+        <ul className="flex gap-3 max-md:hidden">
           {links.map((item) => (
             <li
               className={`${
@@ -46,7 +47,9 @@ const Navbar = ({ className }: PropsNavbar) => {
             >
               <NavLink
                 className={({ isActive }) =>
-                  isActive ? ' transition-all text-primary' : ''
+                  isActive
+                    ? ' transition-all text-primary dark:text-secondary-foreground'
+                    : ''
                 }
                 to={item.path}
               >
@@ -56,7 +59,9 @@ const Navbar = ({ className }: PropsNavbar) => {
           ))}
         </ul>
       </div>
-      <div></div>
+      <div>
+        <ModeToggleTheme />
+      </div>
     </header>
   );
 };
